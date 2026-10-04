@@ -31,7 +31,7 @@ func Test_subtractNumbers(t *testing.T) {
 // methods.
 
 // ——————————————————————————————
-// SETTING UP AND TEARING DOWN
+// Setting up and tearing down
 // ——————————————————————————————
 
 // there are cases when a common state has to be set up before any tests run, and then
@@ -122,7 +122,7 @@ func TestFileProcessingTwo(t *testing.T) {
 }
 
 // ——————————————————————————————
-// TESTING WITH ENVIRONMENT VARIABLES
+// Testing with environment variables
 // ——————————————————————————————
 
 // go provides a helper method on *testing.T for to register env vars.
@@ -146,7 +146,7 @@ func TestEnvVarProcess(t *testing.T) {
 }
 
 // ——————————————————————————————
-// STORING SAMPLE TEST DATA
+// Storing sample test data
 // ——————————————————————————————
 
 // when `go test` is ran, it uses the package directory of any test being run as the
@@ -156,7 +156,7 @@ func TestEnvVarProcess(t *testing.T) {
 // when reading from testdata, always use a relative file path.
 
 // ——————————————————————————————
-// TESTING YOUR PUBLIC API
+// Testing your public API
 // ——————————————————————————————
 
 // tests need to be placed in the same package as the functions they're testing.
@@ -166,7 +166,7 @@ func TestEnvVarProcess(t *testing.T) {
 // `packagename_test`.
 
 // ——————————————————————————————
-// USING go-cmp
+// Using go-cmp
 // ——————————————————————————————
 
 // writing a thorough comparison of a compound type's two instances can be verbose.
@@ -197,3 +197,104 @@ func TestCreatePerson(t *testing.T) {
 		t.Error(diff)
 	}
 }
+
+// ——————————————————————————————
+// Running Table Tests
+// ——————————————————————————————
+
+// table tests are used when multiple test cases need to be used to validate that a
+// function is working well. instead of writing a lot of repetitive testing logic,
+// we can use table tests.
+
+// lets try to test the function DoMath()
+
+func TestDoMath(t *testing.T) {
+	result, err := DoMath(8, 2, "+")
+	if result != 10 {
+		t.Errorf("should have been 10; got %d", result)
+	}
+	if err != nil {
+		t.Errorf("should have been nil error; got %v", err)
+	}
+
+	result, err = DoMath(8, 2, "-")
+	if result != 6 {
+		t.Errorf("should have been 6; got %d", result)
+	}
+	if err != nil {
+		t.Errorf("should have been nil error; got %v", err)
+	}
+
+	result, err = DoMath(8, 2, "*")
+	if result != 16 {
+		t.Errorf("should have been 16; got %d", result)
+	}
+	if err != nil {
+		t.Errorf("should have been nil error; got %v", err)
+	}
+
+	result, err = DoMath(8, 2, "/")
+	if result != 4 {
+		t.Errorf("should have been 4; got %d", result)
+	}
+	if err != nil {
+		t.Errorf("should have been nil error; got %v", err)
+	}
+}
+
+// as you can see, the above test is quite repetitive
+// let's replace this repetition with a table test
+
+func TestDoMathTable(t *testing.T) {
+	// create a slice of anon structs
+	data := []struct {
+		name     string
+		num1     int
+		num2     int
+		op       string
+		expected int
+		errMsg   string
+	}{
+		{"addition", 8, 2, "+", 10, ""},
+		{"subtraction", 8, 2, "-", 6, ""},
+		{"multiplication", 8, 2, "*", 16, ""},
+		{"division", 8, 2, "/", 4, ""},
+		{"bad_division", 8, 0, "/", 0, "division by zero"},
+	}
+
+	// loop through the data and run the test on each case
+	for _, d := range data {
+		t.Run(d.name, func(t *testing.T) {
+			result, err := DoMath(d.num1, d.num2, d.op)
+			if result != d.expected {
+				t.Errorf("Expected %d, got %d", d.expected, result)
+			}
+
+			// comapring error msgs can be tricky, especially when
+
+			var errMsg string
+			if err != nil {
+				errMsg = err.Error()
+			}
+			if errMsg != d.errMsg {
+				t.Errorf("Expected error message '%s', got '%s'", d.errMsg, errMsg)
+			}
+		})
+	}
+}
+
+// ——————————————————————————————
+// Running Tests Concurrently
+// ——————————————————————————————
+
+// by default, unit tests run independently from every other unit test.
+// this makes them good candidates for concurrency.
+// to make them run in parallel, we can add `t.Parallel()` as the first line of the test.
+
+// parallel tests can speed up large, long-running test suites.
+// they do have some disadvantages tho. it isnt advised to mark tests that touch the
+// same shared mutable state as parallel, because the results can be inconsistent.
+
+// ——————————————————————————————
+// Checking Code Coverage
+// ——————————————————————————————
